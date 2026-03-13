@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>slink — Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0b0b0b;
+      --surface:    #111111;
+      --surface-2:  #171717;
+      --border:     #1e1e1e;
+      --border-2:   #2a2a2a;
+      --accent:     #c8f135;
+      --accent-dim: rgba(200,241,53,.09);
+      --accent-border: rgba(200,241,53,.22);
+      --text:       #e0e0e0;
+      --text-2:     #666;
+      --text-3:     #333;
+      --red:        #ff5252;
+      --radius:     6px;
+      --mono:       'JetBrains Mono', monospace;
+      --sans:       'Syne', sans-serif;
+    }
+
+    html { font-size: 14px; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+
+    /* Nav */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 52px;
+      background: rgba(11,11,11,.92); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-family: var(--mono); font-size: 15px; font-weight: 600;
+      color: var(--text); text-decoration: none;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .logo-mark {
+      width: 22px; height: 22px; border-radius: 5px; background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { color: #0b0b0b; }
+    .back-link {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text-2); text-decoration: none;
+      padding: 6px 10px; border-radius: var(--radius);
+      border: 1px solid transparent; transition: all .15s;
+    }
+    .back-link:hover { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+
+    /* Layout */
+    main { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Link header */
+    .link-header {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 24px; margin-bottom: 20px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .link-header-left { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .link-code-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .code-chip {
+      font-family: var(--mono); font-size: 14px; font-weight: 600;
+      color: var(--accent); background: var(--accent-dim);
+      padding: 4px 10px; border-radius: 5px;
+      border: 1px solid var(--accent-border);
+    }
+    .link-label { font-size: 15px; font-weight: 600; color: var(--text); }
+    .link-url-row {
+      font-family: var(--mono); font-size: 12px; color: var(--text-2);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 560px;
+    }
+    .link-url-row a { color: var(--text-2); text-decoration: none; }
+    .link-url-row a:hover { color: var(--text); text-decoration: underline; }
+    .link-dates { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 22px;
+    }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+    .stat-value { font-family: var(--mono); font-size: 32px; font-weight: 600; color: var(--text); line-height: 1; }
+    .stat-value.accent { color: var(--accent); }
+    .stat-sub { font-size: 11px; color: var(--text-2); margin-top: 5px; font-family: var(--mono); }
+
+    /* Chart */
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 22px; margin-bottom: 20px;
+    }
+    .card-title { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 16px; }
+    #chart-wrap { width: 100%; position: relative; }
+
+    /* Chart tooltip */
+    #chart-tip {
+      position: fixed; pointer-events: none;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: 5px; padding: 5px 9px; font-family: var(--mono);
+      font-size: 11px; color: var(--text); z-index: 50;
+      opacity: 0; transition: opacity .1s; white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    }
+
+    /* Clicks table */
+    .clicks-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .clicks-header { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    thead th {
+      padding: 9px 16px; text-align: left; font-size: 11px; font-weight: 600;
+      color: var(--text-3); text-transform: uppercase; letter-spacing: .07em;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+    td { padding: 10px 16px; font-size: 12px; font-family: var(--mono); vertical-align: middle; }
+    .td-time { color: var(--text-2); white-space: nowrap; }
+    .td-ip { color: var(--text); }
+    .td-ua { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .td-ref { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+    /* States */
+    .state-box { padding: 52px 20px; text-align: center; }
+    .state-icon { font-size: 28px; opacity: .25; margin-bottom: 12px; }
+    .state-title { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
+    .state-sub { font-size: 12px; color: var(--text-3); }
+    .loading-row { padding: 32px 20px; text-align: center; color: var(--text-3); font-family: var(--mono); font-size: 12px; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="logo-mark">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+    </span>
+    slink
+  </a>
+  <a href="index.html" class="back-link">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    All links
+  </a>
+</nav>
+
+<main id="main">
+  <div class="loading-row"><span class="spinner"></span>Loading stats…</div>
+</main>
+
+<div id="chart-tip"></div>
+
+<script>
+const CFG_KEY = 'slsConfig'
+function getConfig() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null') } catch { return null } }
+
+async function api(path) {
+  const cfg = getConfig()
+  if (!cfg?.apiBase) throw new Error('No Worker URL configured.')
+  const res = await fetch(cfg.apiBase.replace(/\/$/, '') + path, {
+    headers: { 'X-API-Key': cfg.apiKey || '' }
+  })
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || `HTTP ${res.status}`) }
+  return res.json()
+}
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function fmtTime(ts) {
+  return new Date(ts).toLocaleString('en-US', {
+    month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
+  })
+}
+
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+}
+
+function parseUA(ua) {
+  if (!ua) return '—'
+  if (/Edg\//.test(ua))     return 'Edge'
+  if (/OPR\//.test(ua))     return 'Opera'
+  if (/Chrome\//.test(ua))  return 'Chrome'
+  if (/Firefox\//.test(ua)) return 'Firefox'
+  if (/Safari\//.test(ua))  return 'Safari'
+  if (/curl\//.test(ua))    return 'curl'
+  if (/python/.test(ua))    return 'Python'
+  return ua.slice(0, 32)
+}
+
+// ── Bar chart ─────────────────────────────────────────────────────────────────
+function renderChart(byDay) {
+  // Build a full 30-day series (fill zeros for missing dates)
+  const today = new Date()
+  const days = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+    const entry = byDay.find(b => b.date === dateStr)
+    days.push({ date: dateStr, count: entry ? entry.count : 0 })
+  }
+
+  const maxVal = Math.max(...days.map(d => d.count), 1)
+  const W = 800, H = 140, PL = 36, PB = 24, PR = 8, PT = 8
+  const cW = W - PL - PR
+  const cH = H - PB - PT
+  const bW = cW / days.length
+
+  // Grid lines
+  const gridSteps = 4
+  const gridLines = Array.from({ length: gridSteps + 1 }, (_, i) => {
+    const val = Math.round((maxVal / gridSteps) * i)
+    const y = PT + cH - (i / gridSteps) * cH
+    return `
+      <line x1="${PL}" y1="${y.toFixed(1)}" x2="${W - PR}" y2="${y.toFixed(1)}" stroke="#181818" stroke-width="1"/>
+      <text x="${PL - 5}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" font-size="9" fill="#333" font-family="JetBrains Mono,monospace">${val}</text>`
+  }).join('')
+
+  // Bars (as SVG rects with data attributes for tooltip)
+  const bars = days.map((d, i) => {
+    const bH = Math.max((d.count / maxVal) * cH, d.count > 0 ? 2 : 0)
+    const x = (PL + i * bW + 1).toFixed(1)
+    const y = (PT + cH - bH).toFixed(1)
+    const w = Math.max(bW - 2, 1).toFixed(1)
+    const isLast = i === days.length - 1
+    const opacity = d.count > 0 ? (isLast ? '1' : '0.7') : '0'
+    return `<rect class="bar" x="${x}" y="${y}" width="${w}" height="${bH.toFixed(1)}"
+      fill="var(--accent)" opacity="${opacity}" rx="2"
+      data-date="${d.date}" data-count="${d.count}"/>`
+  }).join('')
+
+  // X-axis labels every 7 days + last bar
+  const labels = days
+    .map((d, i) => ({ d, i }))
+    .filter(({ i }) => i % 7 === 0 || i === 29)
+    .map(({ d, i }) => {
+      const x = (PL + i * bW + bW / 2).toFixed(1)
+      const label = d.date.slice(5) // MM-DD
+      return `<text x="${x}" y="${H - 4}" text-anchor="middle" font-size="9" fill="#444" font-family="JetBrains Mono,monospace">${label}</text>`
+    }).join('')
+
+  // Baseline
+  const baseline = `<line x1="${PL}" y1="${(PT + cH).toFixed(1)}" x2="${W - PR}" y2="${(PT + cH).toFixed(1)}" stroke="#2a2a2a" stroke-width="1"/>`
+
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;overflow:visible">
+    ${gridLines}${baseline}${bars}${labels}
+  </svg>`
+}
+
+// ── Render page ───────────────────────────────────────────────────────────────
+function renderPage(data) {
+  const { link, stats } = data
+  const cfg = getConfig()
+  const base = (cfg?.apiBase || '').replace(/\/$/, '')
+  const shortUrl = `${base}/${link.id}`
+
+  document.title = `slink — /${link.id}`
+
+  const noClicks = `
+    <div class="state-box">
+      <div class="state-icon">📊</div>
+      <div class="state-title">No clicks yet</div>
+      <div class="state-sub">Share your short link to start tracking</div>
+    </div>`
+
+  const clickRows = stats.recent.length
+    ? stats.recent.map(c => `
+        <tr>
+          <td class="td-time">${fmtTime(c.clicked_at)}</td>
+          <td class="td-ip">${escHtml(c.ip || '—')}</td>
+          <td class="td-ua" title="${escHtml(c.user_agent || '')}">${escHtml(parseUA(c.user_agent))}</td>
+          <td class="td-ref" title="${escHtml(c.referer || '')}">${escHtml(c.referer || '—')}</td>
+        </tr>`).join('')
+    : ''
+
+  document.getElementById('main').innerHTML = `
+    <!-- Link header -->
+    <div class="link-header">
+      <div class="link-header-left">
+        <div class="link-code-row">
+          <span class="code-chip">${escHtml(link.id)}</span>
+          ${link.label ? `<span class="link-label">${escHtml(link.label)}</span>` : ''}
+        </div>
+        <div class="link-url-row">
+          <a href="${escHtml(shortUrl)}" target="_blank" rel="noopener">${escHtml(shortUrl)}</a>
+          <span style="color:var(--text-3)"> → </span>
+          <a href="${escHtml(link.url)}" target="_blank" rel="noopener">${escHtml(link.url)}</a>
+        </div>
+        <div class="link-dates">Created ${fmtDate(link.created_at)} · Updated ${fmtDate(link.updated_at)}</div>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total clicks</div>
+        <div class="stat-value accent">${stats.total.toLocaleString()}</div>
+        <div class="stat-sub">all time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last 30 days</div>
+        <div class="stat-value">${stats.last_30_days.toLocaleString()}</div>
+        <div class="stat-sub">clicks</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-card">
+      <div class="card-title">Clicks per day — last 30 days</div>
+      <div id="chart-wrap">
+        ${stats.by_day.length === 0 && stats.last_30_days === 0
+          ? '<div style="padding:32px 0;text-align:center;color:var(--text-3);font-size:12px;font-family:var(--mono)">No click data in this range</div>'
+          : renderChart(stats.by_day)}
+      </div>
+    </div>
+
+    <!-- Recent clicks -->
+    <div class="clicks-card">
+      <div class="clicks-header">
+        <div class="card-title" style="margin:0">Recent clicks</div>
+      </div>
+      ${stats.recent.length === 0
+        ? noClicks
+        : `<div class="table-scroll"><table>
+            <thead><tr>
+              <th>Time</th><th>IP</th><th>Browser</th><th>Referrer</th>
+            </tr></thead>
+            <tbody>${clickRows}</tbody>
+          </table></div>`}
+    </div>`
+
+  // Bar chart tooltip
+  const tip = document.getElementById('chart-tip')
+  document.querySelectorAll('.bar').forEach(bar => {
+    bar.style.cursor = 'default'
+    bar.addEventListener('mouseenter', e => {
+      const date  = bar.dataset.date
+      const count = bar.dataset.count
+      tip.textContent = `${date}  ·  ${count} click${count == 1 ? '' : 's'}`
+      tip.style.opacity = '1'
+    })
+    bar.addEventListener('mousemove', e => {
+      tip.style.left = (e.clientX + 12) + 'px'
+      tip.style.top  = (e.clientY - 28) + 'px'
+    })
+    bar.addEventListener('mouseleave', () => { tip.style.opacity = '0' })
+  })
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const code = new URLSearchParams(location.search).get('code')
+  if (!code) {
+    document.getElementById('main').innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">⚠</div>
+        <div class="state-title">No code specified</div>
+        <div class="state-sub"><a href="index.html" style="color:var(--accent)">← Go back</a></div>
+      </div>`
+    return
+  }
+
+  try {
+    const data = await api(`/api/links/${encodeURIComponent(code)}/stats`)
+    renderPage(data)
+  } catch (err) {
+    document.getElementById('main').innerHTML = `
+      <div class="state-box">
+        <div class="state-icon" style="color:var(--red)">✕</div>
+        <div class="state-title" style="color:var(--red)">Failed to load</div>
+        <div class="state-sub">${escHtml(err.message)}</div>
+      </div>`
+  }
+}
+
+init()
+</script>
+</body>
+</html>

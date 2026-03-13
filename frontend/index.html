@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>slink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0b0b0b;
+      --surface:    #111111;
+      --surface-2:  #171717;
+      --border:     #1e1e1e;
+      --border-2:   #2a2a2a;
+      --accent:     #c8f135;
+      --accent-dim: rgba(200,241,53,.09);
+      --accent-border: rgba(200,241,53,.22);
+      --text:       #e0e0e0;
+      --text-2:     #666;
+      --text-3:     #333;
+      --red:        #ff5252;
+      --red-dim:    rgba(255,82,82,.08);
+      --radius:     6px;
+      --mono:       'JetBrains Mono', monospace;
+      --sans:       'Syne', sans-serif;
+    }
+
+    html { font-size: 14px; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Nav ─────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 52px;
+      background: rgba(11,11,11,.92);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-family: var(--mono); font-size: 15px; font-weight: 600;
+      color: var(--text); text-decoration: none;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .logo-mark {
+      width: 22px; height: 22px; border-radius: 5px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { color: #0b0b0b; }
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+
+    /* ── Layout ──────────────────────────────────── */
+    main { max-width: 980px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── Create card ─────────────────────────────── */
+    .create-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 22px 24px; margin-bottom: 20px;
+    }
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px;
+    }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.grow { flex: 1; min-width: 200px; }
+    .form-group.small { width: 155px; }
+
+    label {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    input[type="text"], input[type="url"] {
+      height: 36px; padding: 0 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      font-family: var(--sans); font-size: 13px;
+      outline: none; transition: border-color .15s; width: 100%;
+    }
+    input[type="text"]:focus, input[type="url"]:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--text-3); }
+
+    .btn {
+      height: 36px; padding: 0 15px; border-radius: var(--radius); border: none;
+      font-family: var(--sans); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: #0b0b0b; }
+    .btn-primary:hover { background: #d4ff3d; }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .5; cursor: default; }
+    .btn-ghost {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+
+    /* ── Table card ──────────────────────────────── */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+    }
+    .badge {
+      font-family: var(--mono); font-size: 11px; padding: 2px 8px;
+      border-radius: 20px; background: var(--surface-2);
+      border: 1px solid var(--border); color: var(--text-2);
+    }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    thead th {
+      padding: 9px 18px; text-align: left; font-size: 11px; font-weight: 600;
+      color: var(--text-3); text-transform: uppercase; letter-spacing: .07em;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+      animation: rowIn .28s ease both;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    td { padding: 11px 18px; font-size: 13px; vertical-align: middle; }
+
+    .code-chip {
+      font-family: var(--mono); font-size: 12px; font-weight: 500;
+      color: var(--accent); background: var(--accent-dim);
+      padding: 3px 9px; border-radius: 4px;
+      border: 1px solid var(--accent-border); white-space: nowrap;
+    }
+    .url-text {
+      font-family: var(--mono); font-size: 11px; color: var(--text-2);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: block; max-width: 260px;
+    }
+    .label-empty { color: var(--text-3); font-style: italic; }
+    .date-text { font-family: var(--mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }
+
+    .actions-cell { display: flex; align-items: center; gap: 3px; }
+    .action-btn {
+      width: 28px; height: 28px; border-radius: 5px; border: 1px solid transparent;
+      background: transparent; color: var(--text-3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .12s; text-decoration: none;
+    }
+    .action-btn:hover { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+    .action-btn.accent:hover { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+    .action-btn.danger:hover { background: var(--red-dim); border-color: rgba(255,82,82,.2); color: var(--red); }
+
+    /* ── Empty / loading states ──────────────────── */
+    .state-box { padding: 52px 20px; text-align: center; }
+    .state-icon { font-size: 28px; opacity: .25; margin-bottom: 12px; }
+    .state-title { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
+    .state-sub { font-size: 12px; color: var(--text-3); }
+    .loading-row { padding: 40px 20px; text-align: center; color: var(--text-3); font-family: var(--mono); font-size: 12px; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .75s linear infinite; vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modals ──────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.72);
+      backdrop-filter: blur(5px); z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .18s;
+    }
+    .overlay.active { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: 12px; width: 100%; max-width: 440px; padding: 24px;
+      transform: translateY(10px) scale(.985); transition: transform .18s;
+      box-shadow: 0 28px 80px rgba(0,0,0,.65);
+    }
+    .overlay.active .modal { transform: translateY(0) scale(1); }
+
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 15px; font-weight: 700; }
+    .modal-x {
+      width: 24px; height: 24px; border-radius: 4px; border: none;
+      background: var(--surface-2); color: var(--text-2);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all .1s; line-height: 1;
+    }
+    .modal-x:hover { background: var(--border-2); color: var(--text); }
+
+    .field { margin-bottom: 15px; }
+    .field label { display: block; margin-bottom: 6px; }
+    .field input { width: 100%; }
+    .field-note { font-size: 11px; color: var(--text-2); margin-top: 5px; line-height: 1.6; }
+    .field-note code { font-family: var(--mono); color: var(--accent); font-size: 10px; }
+
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    /* QR modal */
+    .modal.qr { max-width: 320px; text-align: center; }
+    #qr-wrap {
+      display: inline-block; padding: 14px; background: #fff;
+      border-radius: 8px; margin: 0 auto 14px; line-height: 0;
+    }
+    #qr-wrap canvas, #qr-wrap img { display: block !important; }
+    .qr-url-box {
+      font-family: var(--mono); font-size: 11px; color: var(--text-2);
+      word-break: break-all; padding: 8px 10px; margin-bottom: 16px;
+      background: var(--bg); border-radius: 5px; border: 1px solid var(--border);
+    }
+
+    /* ── Toasts ──────────────────────────────────── */
+    #toasts {
+      position: fixed; bottom: 20px; right: 20px; z-index: 999;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 7px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.45);
+      animation: toastIn .2s ease both;
+    }
+    .toast-ok  { background: rgba(200,241,53,.1); border: 1px solid rgba(200,241,53,.2); color: var(--accent); }
+    .toast-err { background: rgba(255,82,82,.1); border: 1px solid rgba(255,82,82,.2); color: var(--red); }
+    @keyframes toastIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ─────────────────────────────────────────── -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="logo-mark">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+    </span>
+    slink
+  </a>
+  <button class="icon-btn" id="settings-btn" title="Settings">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────── -->
+<main>
+
+  <!-- Create form -->
+  <div class="create-card">
+    <div class="section-label">New link</div>
+    <form class="form-row" id="create-form">
+      <div class="form-group grow">
+        <label for="f-url">Destination URL</label>
+        <input type="url" id="f-url" placeholder="https://example.com/very/long/path" required>
+      </div>
+      <div class="form-group small">
+        <label for="f-label">Label</label>
+        <input type="text" id="f-label" placeholder="Campaign name">
+      </div>
+      <div class="form-group small">
+        <label for="f-code">Custom code</label>
+        <input type="text" id="f-code" placeholder="my-link" pattern="[a-zA-Z0-9_-]+">
+      </div>
+      <div class="form-group" style="align-self:flex-end">
+        <button type="submit" class="btn btn-primary" id="create-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Links table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="section-label" style="margin:0">Links</div>
+      <span class="badge" id="link-count">—</span>
+    </div>
+    <div class="table-scroll">
+      <div id="table-area">
+        <div class="loading-row"><span class="spinner"></span>Loading…</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── QR modal ─────────────────────────────────────── -->
+<div class="overlay" id="ov-qr">
+  <div class="modal qr">
+    <div class="modal-head">
+      <span class="modal-title">QR Code</span>
+      <button class="modal-x" data-close="ov-qr">✕</button>
+    </div>
+    <div id="qr-wrap"></div>
+    <div class="qr-url-box" id="qr-url"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-primary" id="qr-dl">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download PNG
+      </button>
+      <button class="btn btn-ghost" data-close="ov-qr">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit modal ───────────────────────────────────── -->
+<div class="overlay" id="ov-edit">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Edit link</span>
+      <button class="modal-x" data-close="ov-edit">✕</button>
+    </div>
+    <input type="hidden" id="edit-code">
+    <div class="field">
+      <label for="edit-url">Destination URL</label>
+      <input type="url" id="edit-url" placeholder="https://new-destination.com">
+    </div>
+    <div class="field">
+      <label for="edit-label">Label</label>
+      <input type="text" id="edit-label" placeholder="Label">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="ov-edit">Cancel</button>
+      <button class="btn btn-primary" id="edit-save">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings modal ───────────────────────────────── -->
+<div class="overlay" id="ov-settings">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Settings</span>
+      <button class="modal-x" data-close="ov-settings">✕</button>
+    </div>
+    <div class="field">
+      <label for="cfg-base">Worker URL</label>
+      <input type="url" id="cfg-base" placeholder="https://short-link-worker.you.workers.dev">
+      <p class="field-note">Your Cloudflare Worker URL — shown in the terminal after <code>wrangler deploy</code>. No trailing slash.</p>
+    </div>
+    <div class="field">
+      <label for="cfg-key">API Key</label>
+      <input type="text" id="cfg-key" placeholder="your-secret-key">
+      <p class="field-note">Set via <code>wrangler secret put API_KEY</code> before deploying.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="cfg-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toasts ────────────────────────────────────────── -->
+<div id="toasts"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const CFG_KEY = 'slsConfig'
+
+function getConfig() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null') } catch { return null }
+}
+function saveConfig(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)) }
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const cfg = getConfig()
+  if (!cfg?.apiBase) throw new Error('No Worker URL configured. Open settings (⚙) to set it up.')
+  const url = cfg.apiBase.replace(/\/$/, '') + path
+  const res = await fetch(url, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': cfg.apiKey || '', ...(opts.headers || {}) },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div')
+  el.className = `toast toast-${type}`
+  const icon = type === 'ok'
+    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+  el.innerHTML = icon + escHtml(msg)
+  document.getElementById('toasts').appendChild(el)
+  setTimeout(() => {
+    el.style.transition = 'opacity .25s, transform .25s'
+    el.style.opacity = '0'; el.style.transform = 'translateX(12px)'
+    setTimeout(() => el.remove(), 250)
+  }, 3000)
+}
+
+// ── Modals ────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('active') }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active')
+  if (id === 'ov-qr') document.getElementById('qr-wrap').innerHTML = ''
+}
+
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id) })
+})
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => closeModal(btn.dataset.close))
+})
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let links = []
+
+// ── Render table ──────────────────────────────────────────────────────────────
+function renderTable() {
+  const area = document.getElementById('table-area')
+  document.getElementById('link-count').textContent = links.length
+
+  if (!links.length) {
+    area.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">⚡</div>
+        <div class="state-title">No links yet</div>
+        <div class="state-sub">Create your first short link above</div>
+      </div>`
+    return
+  }
+
+  const cfg = getConfig()
+  const base = (cfg?.apiBase || '').replace(/\/$/, '')
+
+  const rows = links.map((link, i) => {
+    const short = `${base}/${link.id}`
+    return `
+      <tr style="animation-delay:${i * 25}ms">
+        <td><span class="code-chip">${escHtml(link.id)}</span></td>
+        <td>${link.label
+          ? `<span>${escHtml(link.label)}</span>`
+          : `<span class="label-empty">—</span>`}</td>
+        <td><span class="url-text" title="${escHtml(link.url)}">${escHtml(link.url)}</span></td>
+        <td><span class="date-text">${fmtDate(link.created_at)}</span></td>
+        <td>
+          <div class="actions-cell">
+            <button class="action-btn" title="Copy short URL" onclick="copyShort(${i})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button class="action-btn accent" title="QR code" onclick="showQr(${i})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M14 18h.01M18 14h.01M18 18h4v0M18 14v4"/></svg>
+            </button>
+            <button class="action-btn" title="Edit" onclick="openEdit(${i})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <a href="stats.html?code=${encodeURIComponent(link.id)}" class="action-btn" title="Stats">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </a>
+            <button class="action-btn danger" title="Delete" onclick="deleteLink(${i})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`
+  }).join('')
+
+  area.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th><th>Label</th><th>Destination</th><th>Created</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`
+}
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function loadLinks() {
+  document.getElementById('table-area').innerHTML =
+    '<div class="loading-row"><span class="spinner"></span>Loading…</div>'
+  try {
+    links = await api('/api/links')
+    renderTable()
+  } catch (err) {
+    document.getElementById('table-area').innerHTML = `
+      <div class="state-box">
+        <div class="state-icon" style="color:var(--red)">✕</div>
+        <div class="state-title" style="color:var(--red)">Failed to load</div>
+        <div class="state-sub">${escHtml(err.message)}</div>
+      </div>`
+  }
+}
+
+// ── Create form ───────────────────────────────────────────────────────────────
+document.getElementById('create-form').addEventListener('submit', async e => {
+  e.preventDefault()
+  const btn = document.getElementById('create-btn')
+  const url   = document.getElementById('f-url').value.trim()
+  const label = document.getElementById('f-label').value.trim()
+  const code  = document.getElementById('f-code').value.trim()
+
+  btn.disabled = true
+  btn.textContent = 'Creating…'
+
+  try {
+    await api('/api/links', {
+      method: 'POST',
+      body: JSON.stringify({ url, label: label || undefined, code: code || undefined }),
+    })
+    document.getElementById('f-url').value = ''
+    document.getElementById('f-label').value = ''
+    document.getElementById('f-code').value = ''
+    toast('Link created')
+    loadLinks()
+  } catch (err) {
+    toast(err.message, 'err')
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create'
+  }
+})
+
+// ── Copy ──────────────────────────────────────────────────────────────────────
+function copyShort(i) {
+  const cfg = getConfig()
+  const base = (cfg?.apiBase || '').replace(/\/$/, '')
+  const url = `${base}/${links[i].id}`
+  navigator.clipboard.writeText(url)
+    .then(() => toast('Copied!'))
+    .catch(() => toast('Copy failed', 'err'))
+}
+
+// ── QR ────────────────────────────────────────────────────────────────────────
+let qrCode = null
+
+function showQr(i) {
+  const cfg = getConfig()
+  const base = (cfg?.apiBase || '').replace(/\/$/, '')
+  const shortUrl = `${base}/${links[i].id}`
+
+  const wrap = document.getElementById('qr-wrap')
+  wrap.innerHTML = ''
+
+  qrCode = new QRCode(wrap, {
+    text: shortUrl, width: 210, height: 210,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M,
+  })
+
+  document.getElementById('qr-url').textContent = shortUrl
+  document.getElementById('qr-dl').onclick = () => downloadQr(links[i].id)
+  openModal('ov-qr')
+}
+
+function downloadQr(code) {
+  const canvas = document.querySelector('#qr-wrap canvas')
+  const img    = document.querySelector('#qr-wrap img')
+  const src    = canvas ? canvas.toDataURL('image/png') : img?.src
+  if (!src) { toast('QR not ready', 'err'); return }
+  const a = document.createElement('a')
+  a.download = `qr-${code}.png`
+  a.href = src
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
+// ── Edit ──────────────────────────────────────────────────────────────────────
+function openEdit(i) {
+  const link = links[i]
+  document.getElementById('edit-code').value  = link.id
+  document.getElementById('edit-url').value   = link.url
+  document.getElementById('edit-label').value = link.label || ''
+  openModal('ov-edit')
+}
+
+document.getElementById('edit-save').addEventListener('click', async () => {
+  const code  = document.getElementById('edit-code').value
+  const url   = document.getElementById('edit-url').value.trim()
+  const label = document.getElementById('edit-label').value.trim()
+  if (!url) { toast('URL is required', 'err'); return }
+
+  const btn = document.getElementById('edit-save')
+  btn.disabled = true; btn.textContent = 'Saving…'
+
+  try {
+    await api(`/api/links/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ url, label }),
+    })
+    closeModal('ov-edit')
+    toast('Link updated')
+    loadLinks()
+  } catch (err) {
+    toast(err.message, 'err')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save changes'
+  }
+})
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+async function deleteLink(i) {
+  const link = links[i]
+  if (!confirm(`Delete /${link.id}?\nThis cannot be undone.`)) return
+  try {
+    await api(`/api/links/${encodeURIComponent(link.id)}`, { method: 'DELETE' })
+    toast('Link deleted')
+    loadLinks()
+  } catch (err) {
+    toast(err.message, 'err')
+  }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+document.getElementById('settings-btn').addEventListener('click', () => {
+  const cfg = getConfig() || {}
+  document.getElementById('cfg-base').value = cfg.apiBase || ''
+  document.getElementById('cfg-key').value  = cfg.apiKey  || ''
+  openModal('ov-settings')
+})
+
+document.getElementById('cfg-save').addEventListener('click', () => {
+  const apiBase = document.getElementById('cfg-base').value.trim()
+  const apiKey  = document.getElementById('cfg-key').value.trim()
+  if (!apiBase) { toast('Worker URL is required', 'err'); return }
+  saveConfig({ apiBase, apiKey })
+  closeModal('ov-settings')
+  toast('Settings saved')
+  loadLinks()
+})
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+const cfg = getConfig()
+if (!cfg?.apiBase) {
+  openModal('ov-settings')
+} else {
+  loadLinks()
+}
+</script>
+</body>
+</html>
