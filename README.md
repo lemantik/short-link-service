@@ -47,7 +47,7 @@ Note the Worker URL printed at the end (e.g. `https://short-link-worker.you.work
 
 ### 6. Deploy the frontend
 
-Push the `frontend/` folder to a GitHub repo and enable GitHub Pages (Settings → Pages → Deploy from branch → `main` / `docs` or root).
+Push the repo to GitHub and enable GitHub Pages (Settings → Pages → Deploy from branch → `main` / `/ (root)`).
 
 ### 7. Configure the dashboard
 
@@ -73,7 +73,7 @@ All printed/published QR codes continue to work and immediately redirect to the 
 cd worker && npm run dev
 ```
 
-Runs at `http://localhost:8787`. Open `frontend/index.html` locally and set the Worker URL to `http://localhost:8787`.
+Runs at `http://localhost:8787`. Open `index.html` locally and set the Worker URL to `http://localhost:8787`.
 
 ---
 
